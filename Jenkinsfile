@@ -12,13 +12,10 @@ pipeline {
         stage('Setup Python Environment') {
             steps {         
                 sh '''
-                #!/bin/bash
-                PATH="/home/anil/.local/bin:$PATH"
-                export PATH
-                echo $PATH
+                curl -LsSf https://astral.sh/uv/install.sh | sh
                 uv venv venv
                 source venv/bin/activate
-                pip install -r requirements.txt
+                uv pip install -r requirements.txt
                 '''
             }
         }

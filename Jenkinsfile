@@ -13,6 +13,8 @@ pipeline {
             steps {         
                 sh '''
                 curl -LsSf https://astral.sh/uv/install.sh | sh
+                PATH="/home/anil/.local/bin:$PATH"
+                export PATH
                 uv venv venv
                 source venv/bin/activate
                 uv pip install -r requirements.txt

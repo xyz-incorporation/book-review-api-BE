@@ -12,6 +12,7 @@ pipeline {
         stage('Setup Python Environment') {
             steps {         
                 sh '''
+                #!/bin/bash
                 PATH="/home/anil/.local/bin:$PATH"
                 export PATH
                 echo $PATH

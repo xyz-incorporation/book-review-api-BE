@@ -2,38 +2,80 @@ pipeline {
     agent any
 
     stages {
-        stage('Build') {
+
+        stage('Checkout') {
             steps {
-                echo 'Build: successful'
+                checkout scm
             }
         }
 
-        stage('Test') {
+        stage('Setup Python Environment') {
             steps {
-                echo 'Test: successful'
+                sh '''
+                python3 -m venv venv
+
+                source venv/bin/activate
+                pip install --upgrade pip
+
+                pip install -r requirements.txt
+                '''
             }
         }
 
-        stage('Deploy') {
+        stage('Run Tests') {
             steps {
-                script {
-                    echo 'Deploying to STAGING...'
-                    sh '''
-                      echo "Staging deployment successful"
-                    '''
-
-                    echo 'Deploying to PRODUCTION...'
-                    sh '''
-                      echo "Production deployment successful"
-                    '''
+                sh '''
+                source venv/bin/activate
+                pytest --junitxml=reports/test-results.xml
+                '''
+            }
+            post {
+                always {
+                    junit 'reports/test-results.xml'
                 }
+            }
+        }
+
+        stage('Security / Dependency Scan') {
+            steps {
+                sh '''
+                source venv/bin/activate
+                # Check for vulnerable dependencies
+                safety check --full-report || true
+
+                # Static code analysis
+                bandit -r . -f xml -o reports/bandit-report.xml || true
+                '''
+            }
+            post {
+                always {
+                    archiveArtifacts artifacts: 'reports/*.xml', allowEmptyArchive: true
+                }
+            }
+        }
+
+        stage('Package') {
+            steps {
+                sh '''
+                source venv/bin/activate
+                python setup.py sdist bdist_wheel
+                '''
+            }
+        }
+
+        stage('Archive Build Output') {
+            steps {
+                archiveArtifacts artifacts: 'dist/**/*', fingerprint: true
             }
         }
     }
 
     post {
-        success { echo 'Pipeline completed successfully' }
-        failure { echo 'Pipeline failed' }
+        success {
+            echo "Python backend build and tests completed successfully!"
+        }
+        failure {
+            echo "Python backend build failed!"
+        }
     }
 }
-

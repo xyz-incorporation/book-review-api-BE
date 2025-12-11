@@ -12,6 +12,7 @@ pipeline {
         stage('Setup Python Environment') {
             steps {         
                 sh '''
+                #!/bin/bash
                 curl -LsSf https://astral.sh/uv/install.sh | sh
                 PATH="/var/lib/jenkins/.local/bin:$PATH"
                 export PATH

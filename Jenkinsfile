@@ -12,8 +12,6 @@ pipeline {
         stage('Setup Python Environment') {
             steps {
                 sh '''
-                curl -LsSf https://astral.sh/uv/install.sh | sh
-                export PATH="$HOME/.cargo/bin:$PATH"
 
                 uv venv venv
                 source venv/bin/activate

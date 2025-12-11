@@ -10,13 +10,14 @@ pipeline {
         }
 
         stage('Setup Python Environment') {
-            steps {
+            steps {         
                 sh '''
-
+                PATH="/home/anil/.local/bin:$PATH"
+                export PATH
+                echo $PATH
                 uv venv venv
                 source venv/bin/activate
-
-                uv pip install -r requirements.txt
+                pip install -r requirements.txt
                 '''
             }
         }

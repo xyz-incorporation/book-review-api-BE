@@ -1,0 +1,5 @@
+pytest
+safety
+bandit
+setuptools
+wheel

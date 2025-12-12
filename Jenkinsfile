@@ -52,20 +52,6 @@ pipeline {
                 }
             }
         }
-
-        stage('Package') {
-            steps {
-                sh '''#!/bin/bash
-                uv run python setup.py sdist bdist_wheel
-                '''
-            }
-        }
-
-        stage('Archive Build Output') {
-            steps {
-                archiveArtifacts artifacts: 'dist/**/*', fingerprint: true
-            }
-        }
     }
 
     post {

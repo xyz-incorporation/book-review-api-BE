@@ -11,8 +11,7 @@ pipeline {
 
         stage('Setup Python Environment') {
             steps {         
-                sh '''
-                #!/bin/bash
+                sh '''#!/bin/bash
                 curl -LsSf https://astral.sh/uv/install.sh | sh
                 PATH="/var/lib/jenkins/.local/bin:$PATH"
                 export PATH
@@ -25,7 +24,7 @@ pipeline {
 
         stage('Run Tests') {
             steps {
-                sh '''
+                sh '''#!/bin/bash
                 source venv/bin/activate
                 pytest --junitxml=reports/test-results.xml
                 '''
@@ -39,7 +38,7 @@ pipeline {
 
         stage('Security / Dependency Scan') {
             steps {
-                sh '''
+                sh '''#!/bin/bash
                 source venv/bin/activate
                 # Check for vulnerable dependencies
                 safety check --full-report || true
@@ -57,7 +56,7 @@ pipeline {
 
         stage('Package') {
             steps {
-                sh '''
+                sh '''#!/bin/bash
                 source venv/bin/activate
                 python setup.py sdist bdist_wheel
                 '''

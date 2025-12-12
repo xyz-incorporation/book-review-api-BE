@@ -15,8 +15,8 @@ pipeline {
                 curl -LsSf https://astral.sh/uv/install.sh | sh
                 PATH="/var/lib/jenkins/.local/bin:$PATH"
                 export PATH
-                uv venv venv
-                source venv/bin/activate
+                export PATH
+                uv venv
                 uv pip install -r requirements.txt
                 '''
             }
@@ -25,8 +25,7 @@ pipeline {
         stage('Run Tests') {
             steps {
                 sh '''#!/bin/bash
-                source venv/bin/activate
-                pytest --junitxml=reports/test-results.xml
+                uv run pytest --junitxml=reports/test-results.xml
                 '''
             }
             post {
@@ -39,12 +38,11 @@ pipeline {
         stage('Security / Dependency Scan') {
             steps {
                 sh '''#!/bin/bash
-                source venv/bin/activate
                 # Check for vulnerable dependencies
-                safety check --full-report || true
+                uv run safety check --full-report || true
 
                 # Static code analysis
-                bandit -r . -f xml -o reports/bandit-report.xml || true
+                uv run bandit -r . -f xml -o reports/bandit-report.xml || true
                 '''
             }
             post {
@@ -57,8 +55,7 @@ pipeline {
         stage('Package') {
             steps {
                 sh '''#!/bin/bash
-                source venv/bin/activate
-                python setup.py sdist bdist_wheel
+                uv run python setup.py sdist bdist_wheel
                 '''
             }
         }

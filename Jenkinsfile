@@ -2,7 +2,8 @@ pipeline {
     agent any
 
     environment {
-        PATH = "/var/lib/jenkins/.local/bin:$PATH"
+        IMAGE_NAME = "books-review-backend"
+        IMAGE_TAG = "${env.BUILD_NUMBER}"
     }
 
     stages {
@@ -13,20 +14,21 @@ pipeline {
             }
         }
 
-        stage('Setup Python Environment') {
-            steps {         
-                sh '''#!/bin/bash
-                curl -LsSf https://astral.sh/uv/install.sh | sh
-                uv venv
-                uv pip install -r requirements.txt -r requirements-dev.txt
+        stage('Build Docker Image') {
+            steps {
+                sh '''
+                docker build -t $IMAGE_NAME:$IMAGE_TAG .
                 '''
             }
         }
 
-        stage('Run Tests') {
+        stage('Run Tests (inside container)') {
             steps {
-                sh '''#!/bin/bash
-                uv run pytest --junitxml=reports/test-results.xml
+                sh '''
+                docker run --rm \
+                  -v $(pwd)/reports:/app/reports \
+                  $IMAGE_NAME:$IMAGE_TAG \
+                  pytest --junitxml=reports/test-results.xml
                 '''
             }
             post {
@@ -38,12 +40,15 @@ pipeline {
 
         stage('Security / Dependency Scan') {
             steps {
-                sh '''#!/bin/bash
-                # Check for vulnerable dependencies
-                uv run safety check --full-report || true
+                sh '''
+                docker run --rm \
+                  $IMAGE_NAME:$IMAGE_TAG \
+                  safety check --full-report || true
 
-                # Static code analysis
-                uv run bandit -r . -f xml -o reports/bandit-report.xml || true
+                docker run --rm \
+                  -v $(pwd)/reports:/app/reports \
+                  $IMAGE_NAME:$IMAGE_TAG \
+                  bandit -r . -f xml -o reports/bandit-report.xml || true
                 '''
             }
             post {
@@ -52,11 +57,19 @@ pipeline {
                 }
             }
         }
+
+        stage('Cleanup') {
+            steps {
+                sh '''
+                docker rmi $IMAGE_NAME:$IMAGE_TAG || true
+                '''
+            }
+        }
     }
 
     post {
         success {
-            echo "Python backend build and tests completed successfully!"
+            echo "Python backend build & tests completed successfully!"
         }
         failure {
             echo "Python backend build failed!"

@@ -6,7 +6,7 @@ pipeline {
         IMAGE_TAG = "${env.BUILD_NUMBER}"
         SONAR_HOST_URL = "http://localhost:9000"
         SONAR_TOKEN = credentials('sonarqube-token-be')
-        DOCKER_REGISTRY = "kumarsai13/book-review-be"
+        DOCKER_REGISTRY = "kumarsai13/book-review-fe"
     }
 
     stages {

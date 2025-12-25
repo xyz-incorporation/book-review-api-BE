@@ -4,6 +4,9 @@ pipeline {
     environment {
         IMAGE_NAME = "books-review-backend"
         IMAGE_TAG = "${env.BUILD_NUMBER}"
+        SONAR_HOST_URL = "http://localhost:9000"
+        SONAR_TOKEN = credentials('sonarqube-token-be')
+        DOCKER_REGISTRY = "kumarsai13/book-review-be"
     }
 
     stages {
@@ -28,7 +31,10 @@ pipeline {
                 docker run --rm \
                   -v $(pwd)/reports:/app/reports \
                   $IMAGE_NAME:$IMAGE_TAG \
-                  pytest --junitxml=reports/test-results.xml
+                  pytest \
+                    --junitxml=reports/test-results.xml \
+                    --cov=. \
+                    --cov-report=xml:reports/coverage.xml
                 '''
             }
             post {
@@ -54,6 +60,51 @@ pipeline {
             post {
                 always {
                     archiveArtifacts artifacts: 'reports/*.xml', allowEmptyArchive: true
+                }
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('SonarQubeServer') {
+                    sh '''
+                    sonar-scanner \
+                      -Dsonar.projectKey=books-review-backend \
+                      -Dsonar.sources=. \
+                      -Dsonar.host.url=${SONAR_HOST_URL} \
+                      -Dsonar.token=${SONAR_TOKEN} \
+                      -Dsonar.python.coverage.reportPaths=reports/coverage.xml \
+                      -Dsonar.python.bandit.reportPaths=reports/bandit-report.xml
+                    '''
+                }
+            }
+        }
+
+        stage('Trivy Scan') {
+            steps {
+                sh '''
+                trivy image \
+                  --scanners vuln \
+                  --severity CRITICAL \
+                  --exit-code 1 \
+                  --no-progress \
+                  $IMAGE_NAME:$IMAGE_TAG
+                '''
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'docker-hub-credentials',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
+                    sh '''
+                    echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                    docker tag $IMAGE_NAME:$IMAGE_TAG $DOCKER_REGISTRY/$IMAGE_NAME:$IMAGE_TAG
+                    docker push $DOCKER_REGISTRY/$IMAGE_NAME:$IMAGE_TAG
+                    '''
                 }
             }
         }

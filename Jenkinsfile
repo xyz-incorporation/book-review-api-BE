@@ -103,7 +103,7 @@ pipeline {
                     sh '''
                     echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
                     docker tag $IMAGE_NAME:$IMAGE_TAG $DOCKER_REGISTRY/$IMAGE_NAME:$IMAGE_TAG
-                    docker push $DOCKER_REGISTRY/$IMAGE_NAME:$IMAGE_TAG
+                    docker push $IMAGE_NAME:$IMAGE_TAG
                     '''
                 }
             }

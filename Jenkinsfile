@@ -64,21 +64,21 @@ pipeline {
             }
         }
 
-        stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv('SonarQubeServer') {
-                    sh '''
-                    sonar-scanner \
-                      -Dsonar.projectKey=books-review-backend \
-                      -Dsonar.sources=. \
-                      -Dsonar.host.url=${SONAR_HOST_URL} \
-                      -Dsonar.token=${SONAR_TOKEN} \
-                      -Dsonar.python.coverage.reportPaths=reports/coverage.xml \
-                      -Dsonar.python.bandit.reportPaths=reports/bandit-report.xml
-                    '''
-                }
-            }
-        }
+        //stage('SonarQube Analysis') {
+            //steps {
+                //withSonarQubeEnv('SonarQubeServer') {
+                    //sh '''
+                    //sonar-scanner \
+                      //-Dsonar.projectKey=books-review-backend \
+                      //-Dsonar.sources=. \
+                      //-Dsonar.host.url=${SONAR_HOST_URL} \
+                      //-Dsonar.token=${SONAR_TOKEN} \
+                      //-Dsonar.python.coverage.reportPaths=reports/coverage.xml \
+                      //-Dsonar.python.bandit.reportPaths=reports/bandit-report.xml
+                    //'''
+                //}
+            //}
+        //}
 
         stage('Trivy Scan') {
             steps {

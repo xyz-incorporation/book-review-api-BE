@@ -6,7 +6,7 @@ pipeline {
         IMAGE_TAG = "${env.BUILD_NUMBER}"
         SONAR_HOST_URL = "http://localhost:9000"
         SONAR_TOKEN = credentials('sonarqube-token-be')
-        DOCKER_REGISTRY = "kumarsai13/book-review-fe"
+        DOCKER_REGISTRY = "kumarsai13/book-review-be"
     }
 
     stages {
@@ -102,8 +102,10 @@ pipeline {
                 )]) {
                     sh '''
                     echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                    docker tag $IMAGE_NAME:$IMAGE_TAG $DOCKER_REGISTRY/$IMAGE_NAME:$IMAGE_TAG
-                    docker push $IMAGE_NAME:$IMAGE_TAG
+                    docker tag $IMAGE_NAME:$IMAGE_TAG \
+                      $DOCKER_USER/book-review-be/$IMAGE_NAME:$IMAGE_TAG
+                    docker push \
+                      $DOCKER_USER/book-review-be/$IMAGE_NAME:$IMAGE_TAG
                     '''
                 }
             }
